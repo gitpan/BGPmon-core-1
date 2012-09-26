@@ -15,7 +15,6 @@ WriteMakefile(
                           'XML::LibXML::Simple' => 0,
 			  'Net::IP' => 0,
 			  'Regexp::IPv6' => 0,
-			  'List::MoreUtils' => 0,
 }, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (#ABSTRACT_FROM  => 'lib/BGPmon/Log.pm', # retrieve abstract from module

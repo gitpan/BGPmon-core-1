@@ -10,7 +10,8 @@ use Test::More;
 use Data::Dumper;
 
 #set the data directory and a test file containing XML messages
-my $data_dir = `echo -n \`pwd\``."/t/data";
+#my $data_dir = `echo -n \`pwd\``."/t/data";
+my $data_dir = 't';
 my $test_file = "$data_dir/bgpmon-translator-dup-archiver-msg.xml";
 
 my $test_fh;

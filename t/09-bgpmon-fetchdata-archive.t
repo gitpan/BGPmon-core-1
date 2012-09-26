@@ -127,6 +127,6 @@ ok( defined($msg),"read_xml_message - read first message");
 #while( defined($msg) ){
 #    $msg = BGPmon::Fetch::Archive::read_xml_message();
 #}
-close_connection();
+BGPmon::Fetch::Archive::close_connection();
 
 done_testing();

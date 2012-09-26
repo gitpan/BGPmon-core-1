@@ -9,7 +9,14 @@ use constant FALSE => 0;
 
 require_ok('Net::IP');
 require_ok('Regexp::IPv6');
-require_ok('List::MoreUtils');
+
+my $resp = `pwd`;
+my $isT = FALSE;
+
+if($resp =~ m/bgpmon-tools\/BGPmon-core\/t/){
+	$isT = TRUE;
+}
+
 
 my $xml6msg = '<BGP_MESSAGE length="00002487" version="0.4" xmlns="urn:ietf:params:xml:ns:xfb-0.4" type_value="2" type="UPDATE"><BGPMON_SEQ id="2128112124" seq_num="2022934477"/><TIME timestamp="1343706329" datetime="2012-07-31T03:45:29Z" precision_time="354"/><PEERING as_num_len="4"><SRC_ADDR><ADDRESS>2001:de8:6::6447:1</ADDRESS><AFI value="2">IPV6</AFI></SRC_ADDR><SRC_PORT>179</SRC_PORT><SRC_AS>6447</SRC_AS><DST_ADDR><ADDRESS>2001:de8:6::7575:1</ADDRESS><AFI value="2">IPV6</AFI></DST_ADDR><DST_PORT>179</DST_PORT><DST_AS>7575</DST_AS><BGPID>0.0.0.0</BGPID></PEERING><ASCII_MSG length="121"><MARKER length="16">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</MARKER><UPDATE withdrawn_len="0" path_attr_len="98"><WITHDRAWN count="0"/><PATH_ATTRIBUTES count="5"><ATTRIBUTE length="1"><FLAGS transitive="TRUE"/><TYPE value="1">ORIGIN</TYPE><ORIGIN value="0">IGP</ORIGIN></ATTRIBUTE><ATTRIBUTE length="14"><FLAGS transitive="TRUE"/><TYPE value="2">AS_PATH</TYPE><AS_PATH><AS_SEG type="AS_SEQUENCE" length="3"><AS>7575</AS><AS>6939</AS><AS>12857</AS></AS_SEG></AS_PATH></ATTRIBUTE><ATTRIBUTE length="4"><FLAGS optional="TRUE"/><TYPE value="4">MULTI_EXIT_DISC</TYPE><MULTI_EXIT_DISC>44</MULTI_EXIT_DISC></ATTRIBUTE><ATTRIBUTE length="16"><FLAGS optional="TRUE" transitive="TRUE"/><TYPE value="8">COMMUNITIES</TYPE><COMMUNITIES><COMMUNITY><AS>7575</AS><VALUE>1002</VALUE></COMMUNITY><COMMUNITY><AS>7575</AS><VALUE>2017</VALUE></COMMUNITY><COMMUNITY><AS>7575</AS><VALUE>6003</VALUE></COMMUNITY><COMMUNITY><AS>7575</AS><VALUE>8002</VALUE></COMMUNITY></COMMUNITIES></ATTRIBUTE><ATTRIBUTE length="48"><FLAGS optional="TRUE"/><TYPE value="14">MP_REACH_NLRI</TYPE><MP_REACH_NLRI><AFI value="2">IPV6</AFI><SAFI value="1">UNICAST</SAFI><NEXT_HOP_LEN>32</NEXT_HOP_LEN><NEXT_HOP><ADDRESS>2001:de8:6::7575:1</ADDRESS><ADDRESS>fe80::222:90ff:fe5f:2740</ADDRESS></NEXT_HOP><NLRI count="2"><PREFIX label="NANN"><ADDRESS>2a00:b400::/32</ADDRESS><AFI value="2">IPV6</AFI><SAFI value="1">UNICAST</SAFI></PREFIX><PREFIX label="NANN"><ADDRESS>2a00:b400:f000::/36</ADDRESS><AFI value="2">IPV6</AFI><SAFI value="1">UNICAST</SAFI></PREFIX></NLRI></MP_REACH_NLRI></ATTRIBUTE></PATH_ATTRIBUTES><NLRI count="0"/></UPDATE></ASCII_MSG><OCTET_MSG><OCTETS length="121">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF007902000000624001010040020E020300001D9700001B1B000032398004040000002CC008101D9703EA1D9707E11D9717731D971F42800E300002012020010DE8000600000000000075750001FE80000000000000022290FFFE5F274000202A00B400242A00B400F0</OCTETS></OCTET_MSG></BGP_MESSAGE>';
 
@@ -42,58 +49,58 @@ BGPmon::Filter::reset();
 
 #--test for file w/o permissions
 BGPmon::Filter::init();
-my $output = `chmod 000 data/bgpmon-filter-config-no-permissions.txt 2>&1`;
+my $output = `chmod 000 t/bgpmon-filter-config-no-permissions.txt 2>&1`;
 if($?){
 	print "$!\n";
 }
-BGPmon::Filter::parse_config_file("data/bgpmon-filter-config-no-permissions.txt");
+BGPmon::Filter::parse_config_file("t/bgpmon-filter-config-no-permissions.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::UNOPANABLE_CONFIG_FILE, "File w/o Permissions");
 BGPmon::Filter::reset();
 ## put permissions back
-my $output = `chmod 555 data/bgpmon-filter-config-no-permissions.txt 2>&1`;
+$output = `chmod 555 t/bgpmon-filter-config-no-permissions.txt 2>&1`;
 if($?){
 	print "$!\n";
 }
 
 #--test for file w/ bad ipv4 
 BGPmon::Filter::init();
-BGPmon::Filter::parse_config_file("data/bgpmon-filter-config-bad-ipv4.txt");
+BGPmon::Filter::parse_config_file("t/bgpmon-filter-config-bad-ipv4.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_IPV4_CONFIG, "Bad IPv4");
 BGPmon::Filter::reset();
 
 #--test for file w/ bad ipv6
 BGPmon::Filter::init();
-BGPmon::Filter::parse_config_file("data/bgpmon-filter-config-bad-ipv6.txt");
+BGPmon::Filter::parse_config_file("t/bgpmon-filter-config-bad-ipv6.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_IPV6_CONFIG, "Bad IPv6");
 BGPmon::Filter::reset();
 
 #--test for file w/ bad AS
 BGPmon::Filter::init();
-BGPmon::Filter::parse_config_file("data/bgpmon-filter-config-bad-as.txt");
+BGPmon::Filter::parse_config_file("t/bgpmon-filter-config-bad-as.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_AS_CONFIG, "Bad AS");
 BGPmon::Filter::reset();
 
 #--test for file w/ incorrect ms/ls
 BGPmon::Filter::init();
-BGPmon::Filter::parse_config_file("data/bgpmon-filter-config-incomplete-line.txt");
+BGPmon::Filter::parse_config_file("t/bgpmon-filter-config-incomplete-line.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_IPV4_CONFIG, "Incomplete Line");
 BGPmon::Filter::reset();
 
 #--test for file w/ unkown parameter
 BGPmon::Filter::init();
-BGPmon::Filter::parse_config_file("data/bgpmon-filter-config-bad-line.txt");
+BGPmon::Filter::parse_config_file("t/bgpmon-filter-config-bad-line.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::UNKNOWN_CONFIG, "Unknown Parameter");
 BGPmon::Filter::reset();
 
 #--test for fully correct file.
 BGPmon::Filter::init();
-BGPmon::Filter::parse_config_file("data/bgpmon-filter-config.txt");
+BGPmon::Filter::parse_config_file("t/bgpmon-filter-config.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::NO_ERROR_CODE, "No Error Code");
 BGPmon::Filter::reset();
@@ -106,7 +113,7 @@ BGPmon::Filter::reset();
 
 #Testing XML Message Parsing
 BGPmon::Filter::init();
-BGPmon::Filter::parse_config_file("data/bgpmon-filter-config.txt");
+BGPmon::Filter::parse_config_file("t/bgpmon-filter-config.txt");
 
 #--testing that the code checks for a message
 BGPmon::Filter::parse_xml_msg();
@@ -165,7 +172,7 @@ is($res5, TRUE, "XML AS Last in AS_PATH");
 
 #--testing more specific prefix matching works correctly
 BGPmon::Filter::reset();
-BGPmon::Filter::parse_config_file('data/bgpmon-filter-config-ms.txt');
+BGPmon::Filter::parse_config_file('t/bgpmon-filter-config-ms.txt');
 $xml4msg = '<BGP_MESSAGE length="00001140" version="0.4" xmlns="urn:ietf:params:xml:ns:xfb-0.4" type_value="2" type="UPDATE"><BGPMON_SEQ id="127893688" seq_num="1541418969"/><TIME timestamp="1346459370" datetime="2012-09-01T00:29:30Z" precision_time="0"/><PEERING as_num_len="2"><SRC_ADDR><ADDRESS>187.16.217.154</ADDRESS><AFI value="1">IPV4</AFI></SRC_ADDR><SRC_PORT>179</SRC_PORT><SRC_AS>53175</SRC_AS><DST_ADDR><ADDRESS>200.160.6.217</ADDRESS><AFI value="1">IPV4</AFI></DST_ADDR><DST_PORT>179</DST_PORT><DST_AS>6447</DST_AS><BGPID>0.0.0.0</BGPID></PEERING><ASCII_MSG length="31"><MARKER length="16">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</MARKER><UPDATE withdrawn_len="8" path_attr_len="0"><WITHDRAWN count="2"><PREFIX label="WITH"><ADDRESS>150.196.29.0/24</ADDRESS><AFI value="1">IPV4</AFI><SAFI value="1">UNICAST</SAFI></PREFIX><PREFIX label="WITH"><ADDRESS>205.94.224.0/20</ADDRESS><AFI value="1">IPV4</AFI><SAFI value="1">UNICAST</SAFI></PREFIX></WITHDRAWN><PATH_ATTRIBUTES count="0"/><NLRI count="0"/></UPDATE></ASCII_MSG><OCTET_MSG><OCTETS length="31">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF001F0200081896C41D14CD5EE00000</OCTETS></OCTET_MSG></BGP_MESSAGE>';
 my $resa = BGPmon::Filter::matches($xml4msg);
 is($resa, TRUE, "More Specific Prefix Matching"); 
@@ -173,7 +180,7 @@ is($resa, TRUE, "More Specific Prefix Matching");
 
 #--testing less specific prefix matching works correctly
 BGPmon::Filter::reset();
-BGPmon::Filter::parse_config_file('data/bgpmon-filter-config-ls.txt');
+BGPmon::Filter::parse_config_file('t/bgpmon-filter-config-ls.txt');
 $xml4msg = '<BGP_MESSAGE length="00001140" version="0.4" xmlns="urn:ietf:params:xml:ns:xfb-0.4" type_value="2" type="UPDATE"><BGPMON_SEQ id="127893688" seq_num="1541418969"/><TIME timestamp="1346459370" datetime="2012-09-01T00:29:30Z" precision_time="0"/><PEERING as_num_len="2"><SRC_ADDR><ADDRESS>187.16.217.154</ADDRESS><AFI value="1">IPV4</AFI></SRC_ADDR><SRC_PORT>179</SRC_PORT><SRC_AS>53175</SRC_AS><DST_ADDR><ADDRESS>200.160.6.217</ADDRESS><AFI value="1">IPV4</AFI></DST_ADDR><DST_PORT>179</DST_PORT><DST_AS>6447</DST_AS><BGPID>0.0.0.0</BGPID></PEERING><ASCII_MSG length="31"><MARKER length="16">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</MARKER><UPDATE withdrawn_len="8" path_attr_len="0"><WITHDRAWN count="2"><PREFIX label="WITH"><ADDRESS>150.196.29.0/24</ADDRESS><AFI value="1">IPV4</AFI><SAFI value="1">UNICAST</SAFI></PREFIX><PREFIX label="WITH"><ADDRESS>205.94.224.0/20</ADDRESS><AFI value="1">IPV4</AFI><SAFI value="1">UNICAST</SAFI></PREFIX></WITHDRAWN><PATH_ATTRIBUTES count="0"/><NLRI count="0"/></UPDATE></ASCII_MSG><OCTET_MSG><OCTETS length="31">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF001F0200081896C41D14CD5EE00000</OCTETS></OCTET_MSG></BGP_MESSAGE>';
 my $resb = BGPmon::Filter::matches($xml4msg);
 is($resb, TRUE, "Less Specifix Prefix Matching"); 

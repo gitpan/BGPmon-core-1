@@ -1,5 +1,4 @@
 package BGPmon::Filter;
-our $VERSION = 1.00;
 use strict;
 use warnings;
 use constant FALSE => 0;
@@ -12,6 +11,7 @@ use Regexp::IPv6 qw($IPv6_re);
 
 BEGIN{
 	require Exporter;
+	our $VERSION = 1.01;
 	our $AUTOLOAD;
 	our @ISA = qw(Exporter);
 	our @EXPORT_OK = qw(init parse_xml_msg parse_config_file toString reset get_error_msg get_error_code matches);
