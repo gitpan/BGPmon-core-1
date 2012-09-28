@@ -3,7 +3,7 @@ no strict "refs";
 use warnings;
 #use Test::More tests => 99;
 #use Test::More tests => 97;
-use Test::More tests => 94;
+use Test::More skip_all => "Only for development purposes";
 
 # check the dependencies
 BEGIN {
