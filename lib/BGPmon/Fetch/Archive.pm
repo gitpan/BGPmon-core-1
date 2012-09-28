@@ -1,5 +1,5 @@
 package BGPmon::Fetch::Archive;
-our $VERSION = 1.01;
+our $VERSION = 1.02;
 
 use 5.006;
 use strict;
@@ -82,6 +82,8 @@ END{
 }
 
 =head1 NAME
+
+BGPmon::Fetch::Archive
 
 The BGPmon::Fetch::Archive module, to connect to an online archive of
 BGP files, download XML files and read XML messages one at a time.

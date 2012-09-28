@@ -1,5 +1,5 @@
 package BGPmon::Fetch::Client;
-our $VERSION = 1.01;
+our $VERSION = 1.02;
 
 use 5.006;
 use strict;
@@ -67,6 +67,8 @@ for my $function (@functions) {
 }
 
 =head1 NAME
+
+BGPmon::Fetch::Client
 
 The BGPmon Client module, to connect to BGPmon and receive XML messages one at a time.
 

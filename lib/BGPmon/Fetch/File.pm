@@ -1,5 +1,5 @@
 package BGPmon::Fetch::File;
-our $VERSION = 1.01;
+our $VERSION = 1.02;
 
 use 5.006;
 use strict;
@@ -87,6 +87,8 @@ END{
 }
 
 =head1 NAME
+
+BGPmon::Fetch::File
 
 The BGPmon::Fetch::File module, to connect to a local XML file and read
 XML messages one at a time.

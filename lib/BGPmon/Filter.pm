@@ -11,7 +11,7 @@ use Regexp::IPv6 qw($IPv6_re);
 
 BEGIN{
 	require Exporter;
-	our $VERSION = 1.01;
+	our $VERSION = 1.02;
 	our $AUTOLOAD;
 	our @ISA = qw(Exporter);
 	our @EXPORT_OK = qw(init parse_xml_msg parse_config_file toString reset get_error_msg get_error_code matches);

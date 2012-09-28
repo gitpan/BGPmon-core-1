@@ -1,5 +1,5 @@
 package BGPmon::Fetch;
-our $VERSION = 1.01;
+our $VERSION = 1.02;
 
 use 5.006;
 use strict;
@@ -41,6 +41,8 @@ for my $function_name (@function_names) {
 }
 
 =head1 NAME
+
+BGPmon::Fetch.pm
 
 The BGPmon Fetch module, to connect to a live BGPmon stream,
 an online archive of XFB data, or a single XML file.  The interface then
