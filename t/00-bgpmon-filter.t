@@ -9,6 +9,7 @@ use constant FALSE => 0;
 
 require_ok('Net::IP');
 require_ok('Regexp::IPv6');
+require_ok('Net::Address::IP::Local');
 
 my $resp = `pwd`;
 my $isT = FALSE;

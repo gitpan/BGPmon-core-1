@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-our $VERSION = 1.03;
+our $VERSION = 1.04;
 use strict;
 use warnings;
 use constant FALSE => 0;
@@ -16,6 +16,7 @@ use POSIX;
 use IO::Handle;
 use IO::Socket;
 use Regexp::IPv6 qw($IPv6_re);
+use Net::Address::IP::Local;
 
 ##---- Global Variables
 my $progName = $0;
@@ -243,8 +244,9 @@ if($outputToFile){
 
 # Starting listening socket
 print "Opening port for connection to listen in on.\n" if $debug;
+my $myAddr = Net::Address::IP::Local->public;
 $sock = new IO::Socket::INET (
-	LocalHost => '127.0.0.1',
+	LocalHost => $myAddr,
 	LocalPort => $myPort,
 	Proto => 'tcp',
 	Listen => 5,
@@ -515,11 +517,17 @@ sub tcpThread{
 	my @queue = ();
 	my $myQueue = \@queue; #this is a refrence to the queue
 	share($myQueue);
-
 	{
 		lock(@tcpReadersQueues);
 		push(@tcpReadersQueues, $myQueue);
 	}
+
+	#Sending intial <xml> to the stream for data processing
+	my $myXMLtag = '<xml>';
+
+	$mySock->send($myXMLtag);
+
+
 	while(!$exit){
 		my $nextMsg = undef;
 		#print "Thread looking for messages.\n" if $debug;
