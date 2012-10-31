@@ -14,7 +14,7 @@ require Exporter;
 get_withdrawn get_mp_withdrawn get_peering get_origin get_as_path get_as4_path 
 get_next_hop get_mp_next_hop get_xml_string get_error_code get_error_message 
 get_error_msg get_xml_message_type);
-    our $VERSION = 1.04;
+    our $VERSION = '1.05';
 }
 
 #Variables to hold error codes and messages

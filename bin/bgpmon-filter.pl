@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-our $VERSION = 1.04;
+our $VERSION = '1.05';
 use strict;
 use warnings;
 use constant FALSE => 0;
 use constant TRUE => 1;
 use BGPmon::Log qw(log_init log_fatal log_err log_warn log_notice log_info debug log_close);
-use BGPmon::Fetch qw(connect_bgpdata read_xml_message close_connection);
+use BGPmon::Fetch qw(connect_bgpdata read_xml_message close_connection is_connected);
 use BGPmon::Translator::XFB2BGPdump qw(translate_message);
 use BGPmon::Configure;
 use BGPmon::Filter;
@@ -449,7 +449,7 @@ sub printDebugInfo{
 	print "BGPmon Server\t\t$server\n";
 	print "BGPmon Port\t\t$port\n";
 	print "Listening Port\t\t$myPort\n";
-	print "Queue Length\t\t$queueLength\n";
+	#print "Queue Length\t\t$queueLength\n";
 	print "Configuration File\t$config_file\n";
 	print "Critical Prefix File\t$prefixFilename\n";
 	print "Output File\t\t$outputFilename\n" if $outputToFile;
@@ -569,6 +569,15 @@ sub reader{
 
 	while(!$exit){
 		$SIG{'INT'} = sub {print "Exiting\n"; threads->exit();};
+
+
+		if(!is_connected){
+			print "Lost connection to BGPmon. Stopping.\n" if $debug;
+			log_info("Lost connection to BGPmon.  Stopping.");
+			$exit = TRUE;
+			next;
+		}
+
 		$xmlMsg = read_xml_message();
 
 		# Check if we received an XML message
