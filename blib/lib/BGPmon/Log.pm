@@ -1,5 +1,5 @@
 package BGPmon::Log;
-our $VERSION = '1.06';
+our $VERSION = '1.05';
 
 use 5.006;
 use strict;

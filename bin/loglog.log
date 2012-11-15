@@ -1,12 +1,38 @@
-2012-10-31 20:01:11 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27615]: [LOG_INFO] bgpmon-filter has started the log file.
-2012-10-31 20:01:11 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27615]: [LOG_INFO] Started listening for client connections on 60000.
-2012-10-31 20:01:11 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27615]: [LOG_INFO] Initialized the filter module.
-2012-10-31 20:01:11 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27615]: [LOG_INFO] Parsed configuration file prefixes.txt.
-2012-10-31 20:01:11 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27615]: [LOG_INFO] Connected to BGPmon server.
-2012-10-31 20:01:12 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27615]: [LOG_INFO] bgpmon-filter is listening for connections.
-2012-10-31 20:02:29 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27668]: [LOG_INFO] bgpmon-filter has started the log file.
-2012-10-31 20:02:29 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27668]: [LOG_INFO] Started listening for client connections on 60000.
-2012-10-31 20:02:29 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27668]: [LOG_INFO] Initialized the filter module.
-2012-10-31 20:02:29 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27668]: [LOG_INFO] Parsed configuration file prefixes.txt.
-2012-10-31 20:02:29 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27668]: [LOG_INFO] Connected to BGPmon server.
-2012-10-31 20:02:29 GMT lawrence-virtual-machine ./bgpmon-filter.pl[27668]: [LOG_INFO] bgpmon-filter is listening for connections.
+2012-11-15 19:38:02 GMT lawrence-virtual-machine ./bgpmon-filter.pl[2582]: [LOG_INFO] bgpmon-filter has started the log file.
+2012-11-15 19:38:02 GMT lawrence-virtual-machine ./bgpmon-filter.pl[2582]: [LOG_INFO] Started listening for client connections on 60000.
+2012-11-15 19:38:02 GMT lawrence-virtual-machine ./bgpmon-filter.pl[2582]: [LOG_INFO] Initialized the filter module.
+2012-11-15 19:38:02 GMT lawrence-virtual-machine ./bgpmon-filter.pl[2582]: [LOG_ERR] Error parsing configuration file prefixes.txt.
+2012-11-15 19:49:49 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_INFO] bgpmon-filter has started the log file.
+2012-11-15 19:49:49 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_INFO] Started listening for client connections on 60000.
+2012-11-15 19:49:49 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_INFO] Initialized the filter module.
+2012-11-15 19:49:49 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_INFO] Parsed configuration file prefixes.txt.
+2012-11-15 19:49:49 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_INFO] Connected to BGPmon server.
+2012-11-15 19:49:49 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_INFO] bgpmon-filter is listening for connections.
+2012-11-15 19:50:25 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_ERR] Error reading XML messgae from BGPmon
+2012-11-15 19:50:25 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_INFO] Lost connection to BGPmon.  Stopping.
+2012-11-15 19:50:25 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3167]: [LOG_INFO] Connection to bgpmon instance closed.
+2012-11-15 19:52:41 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3261]: [LOG_INFO] bgpmon-filter has started the log file.
+2012-11-15 19:52:41 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3261]: [LOG_INFO] Started listening for client connections on 60000.
+2012-11-15 19:52:41 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3261]: [LOG_INFO] Initialized the filter module.
+2012-11-15 19:52:41 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3261]: [LOG_INFO] Parsed configuration file prefixes.txt.
+2012-11-15 19:52:41 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3261]: [LOG_ERR] Coudln't connect to BGPmon server.
+2012-11-15 20:07:03 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3452]: [LOG_INFO] bgpmon-filter has started the log file.
+2012-11-15 20:07:03 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3452]: [LOG_INFO] Started listening for client connections on 60000.
+2012-11-15 20:07:03 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3452]: [LOG_INFO] Initialized the filter module.
+2012-11-15 20:07:03 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3452]: [LOG_INFO] Parsed configuration file prefixes.txt.
+2012-11-15 20:07:03 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3452]: [LOG_ERR] Coudln't connect to BGPmon server.
+2012-11-15 20:07:54 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3464]: [LOG_INFO] bgpmon-filter has started the log file.
+2012-11-15 20:07:54 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3464]: [LOG_INFO] Started listening for client connections on 60000.
+2012-11-15 20:07:54 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3464]: [LOG_INFO] Initialized the filter module.
+2012-11-15 20:07:54 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3464]: [LOG_INFO] Parsed configuration file prefixes.txt.
+2012-11-15 20:07:54 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3464]: [LOG_ERR] Coudln't connect to BGPmon server.
+2012-11-15 20:10:01 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3469]: [LOG_INFO] bgpmon-filter has started the log file.
+2012-11-15 20:10:01 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3469]: [LOG_INFO] Started listening for client connections on 60000.
+2012-11-15 20:10:01 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3469]: [LOG_INFO] Initialized the filter module.
+2012-11-15 20:10:01 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3469]: [LOG_INFO] Parsed configuration file prefixes.txt.
+2012-11-15 20:10:01 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3469]: [LOG_ERR] Coudln't connect to BGPmon server.
+2012-11-15 20:12:56 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3631]: [LOG_INFO] bgpmon-filter has started the log file.
+2012-11-15 20:12:56 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3631]: [LOG_INFO] Started listening for client connections on 60000.
+2012-11-15 20:12:56 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3631]: [LOG_INFO] Initialized the filter module.
+2012-11-15 20:12:56 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3631]: [LOG_INFO] Parsed configuration file prefixes.txt.
+2012-11-15 20:12:56 GMT lawrence-virtual-machine ./bgpmon-filter.pl[3631]: [LOG_ERR] Coudln't connect to BGPmon server.

@@ -90,11 +90,17 @@ is($errCode, BGPmon::Filter::INVALID_AS_CONFIG, "Bad AS");
 BGPmon::Filter::reset();
 
 #--test for file w/ incorrect ms/ls
+=comment
+this is cut for the  moment until we define how we're going to deal with the
+single addresses to filter
+
 BGPmon::Filter::init();
 BGPmon::Filter::parse_config_file("t/bgpmon-filter-config-incomplete-line.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_IPV4_CONFIG, "Incomplete Line");
 BGPmon::Filter::reset();
+=cut
+
 
 #--test for file w/ unkown parameter
 BGPmon::Filter::init();

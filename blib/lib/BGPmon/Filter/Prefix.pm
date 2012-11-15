@@ -1,5 +1,5 @@
 package BGPmon::Filter::Prefix;
-our $VERSION = '1.06';
+our $VERSION = '1.05';
 use strict;
 use warnings;
 use constant TRUE => 1;

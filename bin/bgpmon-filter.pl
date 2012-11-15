@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-our $VERSION = '1.05';
+our $VERSION = '1.06';
 use strict;
 use warnings;
 use constant FALSE => 0;
@@ -269,6 +269,11 @@ if(BGPmon::Filter::parse_config_file($prefixFilename)){
 	exit 1;
 }
 log_info("Parsed configuration file $prefixFilename.");
+
+if($debug){
+	print "Active filters:\n";
+	BGPmon::Filter::printFilters();
+}
 
 
 # Connecting to BGPmon
