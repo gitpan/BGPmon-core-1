@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-our $VERSION = '1.06';
+our $VERSION = '1.061';
 use strict;
 use warnings;
 use constant FALSE => 0;
