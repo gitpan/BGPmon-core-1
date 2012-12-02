@@ -1,5 +1,0 @@
-prefix_file = prefixes.txt
-log_level = 7
-log_file = loglog.log
-server = 127.0.0.1
-debug = 1
