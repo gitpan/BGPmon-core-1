@@ -11,7 +11,7 @@ require Exporter;
     our $AUTOLOAD;
     our @ISA = qw(Exporter);
     our @EXPORT_OK = qw(translate_msg toString get_content reset get_error_code get_error_message get_error_msg);
-    our $VERSION = '1.062';
+    our $VERSION = '1.07';
 }
 
 #Variable to hold both the original as well as the converted XML

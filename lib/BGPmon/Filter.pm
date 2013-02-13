@@ -5,13 +5,14 @@ use constant FALSE => 0;
 use constant TRUE => 1;
 use BGPmon::Translator::XFB2PerlHash;
 use BGPmon::Filter::Prefix;
+use BGPmon::Filter::Address;
 use Net::IP;
 use Regexp::IPv6 qw($IPv6_re);
 
 
 BEGIN{
 	require Exporter;
-	our $VERSION = '1.062';
+	our $VERSION = '1.07';
 	our $AUTOLOAD;
 	our @ISA = qw(Exporter);
 	our @EXPORT_OK = qw(init parse_xml_msg parse_config_file toString reset get_error_msg get_error_code matches printFilters);
@@ -51,6 +52,7 @@ use constant NO_MSG_GIVEN_MSG => "No XML message was given.";
 my @v6prefixes = ();
 my @v4prefixes = ();
 my @asNumbers = ();
+my @addresses = ();
 my $prefixFilename;
 
 # Variables to hold the prefixes we've found in the latest message that was parsed.
@@ -177,6 +179,9 @@ sub reset{
 	foreach(@asNumbers){
 		$_ = undef;
 	}
+	foreach(@addresses){
+		$_ = undef;
+	}
 	foreach(@v4){
 		$_ = undef;
 	}
@@ -189,6 +194,7 @@ sub reset{
 	@v4prefixes = ();
 	@v6prefixes = ();
 	@asNumbers = ();
+	@addresses = ();
 	@v4 = ();
 	@v6 = ();
 	@as = ();
@@ -251,23 +257,44 @@ sub is_IPv6{
 
 
 
-my $ip_rgx = "\\d+\\.\\d+\\.\\d+\\.\\d+\/\\d+";
+my $prefix_rgx = "\\d+\\.\\d+\\.\\d+\\.\\d+\/\\d+";
+my $ip_rgx = "\\d+\\.\\d+\\.\\d+\\.\\d+";
 sub ipv4_chkip($) {
-  my ($ip) = $_[0] =~ /($ip_rgx)/o;
+	#checking to see if it's a prefix or an IPv4 address
+        my ($ip) = $_[0] =~ /($prefix_rgx)/o;
 
 
-##        print "strike\n" unless $ip;
+        #print "Is a prefix\n" if $ip;
+        #print "Not a prefix\n" unless $ip;
+        if($ip){#if a prefix
 
-  return undef unless $ip;
+                my @parts = split /\//, $ip;
+                my $addr = $parts[0];
+                my $mask = $parts[1];
+                # Check that bytes are in range
+                for (split /\./, $addr ) {
+                        return undef if $_ < 0 or $_ > 255;
+                }
+                return undef if $mask < 0 or $mask > 32;
+                return $ip;
+        }
 
+        else{#if an address
+                ($ip) = $_[0] =~ /($ip_rgx)/o;
+                #print "Is an IP address\n" if $ip;
+                #print "Not an address\n" unless $ip;
+                if($ip){
+                        # Check that bytes are in range
+                        for (split /\./, $ip ) {
+                                return undef if $_ < 0 or $_ > 255;
+                        }
+                        return $ip;
+                 }
+        }
 
-
-  # Check that bytes are in range
-  for (split /\./, $ip ) {
-    return undef if $_ < 0 or $_ > 255;
-  }
-  return $ip;
+        return undef;
 }
+
 
 
 
@@ -310,7 +337,6 @@ sub parse_config_file{
 
 
 		# Splitting the line up
-
 		my @lineArray = split ' ', $line;
 		my $lineLength = scalar(@lineArray);
 		if($lineLength < 1){
@@ -334,56 +360,30 @@ sub parse_config_file{
 		}
 		# if this line is an IPv4 number
 		elsif($lineArray[0] =~ /[iI][pP][vV][4]/){
-			# Ensuring that it's a valid IPv4 prefix
-=comment
-			if(!($line =~  m/([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}\/[0-9]{1,2})\s*[ml][s]/)){
-				
-				#TODO replace the next two lines later and allow for single address specification
-				print "skipping $line\n";
-				next;
-				#$error_code{$fname} = INVALID_IPV4_CONFIG;
-				#$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG;
-				#return 1;
-			}
-
-=cut
-
+			#Making sure whatever is next is either a valid prefix or IPv4 address
 			my $ipcheck = ipv4_chkip($lineArray[1]);
 			print "Skipping $line\n" unless $ipcheck;
 			next unless $ipcheck;
 
-			my @ipv4Addr = split(/\//, $lineArray[1]);
-			my @octals = split(/\./,$ipv4Addr[0]);
-			my $prefix = $ipv4Addr[1];
-			foreach(@octals){
-				if($_ < 0 or $_ > 255){	
-					$error_code{$fname} = INVALID_IPV4_CONFIG;
-					$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG;
-					return 1;
+			#Decerning if we have a prefix or IPv4 address
+			if($ipcheck =~ /\//){ #prefix
+				if(!$lineArray[2] =~ m/[mMlL][sS]/){
+					#$error_code{$fname} = INVALID_IPV4_CONFIG;
+					#$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG;
+					#return 1;
+					print "Skippnig $line\n";
+					next;
 				}
+				# Adding prefix to the list since it's okay
+				my $moreSpecific = $lineArray[2] =~ m/[mM][sS]/;
+				my $temp = new BGPmon::Filter::Prefix(4, 
+						$lineArray[1], $moreSpecific); 
+				push(@v4prefixes, $temp);
 			}
-			if($prefix < 0 or $prefix > 32){
-				$error_code{$fname} = INVALID_IPV4_CONFIG;
-				$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG;
-				return 1;
+			else{#IPv4 address
+				my $temp = new BGPmon::Filter::Address(4,$lineArray[1]);
+				push(@addresses,$temp);
 			}
-
-
-			if(!defined($lineArray[2])){ 
-				$error_code{$fname} = INVALID_IPV4_CONFIG;
-				$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG;
-				return 1;
-			}
-			if(!$lineArray[2] =~ m/[mMlL][sS]/){
-				$error_code{$fname} = INVALID_IPV4_CONFIG;
-				$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG;
-				return 1;
-			}
-			# Adding prefix to the list since it's okay
-			my $moreSpecific = $lineArray[2] =~ m/[mM][sS]/;
-			my $temp = new BGPmon::Filter::Prefix(4, 
-					$lineArray[1], $moreSpecific); 
-			push(@v4prefixes, $temp);
 		}
 
 		# if this line is an IPv6 number
@@ -478,10 +478,15 @@ sub printFilters(){
 		print "$temp\n";
 	}
 	foreach(@v6prefixes){
-		print "$_->toString()\n";
+		my $temp = $_->toString();
+		print "$temp\n";
 	}
 	foreach(@asNumbers){
 		print "$_\n";
+	}
+	foreach(@addresses){
+		my $temp = $_->toString();
+		print "$temp\n";
 	}
 }
 
@@ -709,6 +714,16 @@ sub matches{
 					return TRUE;
 				}
 			}
+		}
+		foreach(@addresses){
+			my $addr = $_;
+			foreach(@v4){
+				my $tempPrefix = $_;
+				if($addr->matches($tempPrefix)){
+					return TRUE;
+				}
+			}
+
 		}
 	}
 

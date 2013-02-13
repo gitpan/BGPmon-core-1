@@ -1,5 +1,5 @@
 package BGPmon::Fetch::Client;
-our $VERSION = '1.062';
+our $VERSION = '1.07';
 
 use 5.006;
 use strict;

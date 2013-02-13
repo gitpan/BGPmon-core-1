@@ -1,5 +1,5 @@
 package BGPmon::Filter::Prefix;
-our $VERSION = '1.062';
+our $VERSION = '1.07';
 use strict;
 use warnings;
 use constant TRUE => 1;
@@ -125,7 +125,7 @@ sub matches{
 
 
 #comment
-#Will test to see if the given prefixe is equivilent or more specific than
+#Will test to see if the given prefix is equivilent or more specific than
 #the one stored.
 #cut
 sub moreSpecific{
@@ -149,7 +149,7 @@ sub moreSpecific{
 }
 
 #comment
-#Will test to see if the given prefixe is equivilent or less specific than
+#Will test to see if the given prefix is equivilent or less specific than
 #the one stored.
 #=cut
 sub lessSpecific{

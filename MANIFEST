@@ -24,6 +24,7 @@ t/bgpmon-filter-config-ls.txt
 t/bgpmon-filter-config-ms.txt
 t/bgpmon-filter-config-no-permissions.txt
 t/bgpmon-filter-config.txt
+t/bgpmon-filter-config-ip.txt
 t/bgpmon-translator-dup-archiver-msg.xml
 t/compress_test.bz2
 t/compress_test.gz
@@ -37,6 +38,7 @@ lib/BGPmon/Translator/XFB2PerlHash/Simple.pm
 lib/BGPmon/Translator/XFB2BGPdump.pm
 lib/BGPmon/Filter.pm
 lib/BGPmon/Filter/Prefix.pm
+lib/BGPmon/filter/Address.pm
 lib/BGPmon/Configure.pm
-bin/bgpmon-filter.pl
+bin/bgpmon_filter
 etc/XFB.xsd
