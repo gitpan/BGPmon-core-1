@@ -1,5 +1,5 @@
 package BGPmon::Filter::Prefix;
-our $VERSION = '1.07';
+our $VERSION = '1.08';
 use strict;
 use warnings;
 use constant TRUE => 1;
@@ -91,6 +91,53 @@ sub new{
 	return $self;
 }
 
+
+
+
+sub canAggregateWith{
+	my $self = shift;
+	my $possPart = shift;
+
+	my $netPref = $self->{'netIP'};
+	my $partPref = $possPart->{'netIP'};
+	my $res = $netPref->aggregate($partPref);
+
+	return TRUE if defined $res;
+
+	return FALSE;
+}
+
+
+sub getAggregate{
+	my $self = shift;
+	my $possPart = shift;
+
+	my $netPref = $self->{'netIP'};
+	my $partPref = $possPart->{'netIP'};
+	my $res = $netPref->aggregate($partPref);
+	$res = $res->prefix();
+
+	return $res;
+}
+
+
+sub matchSpecific{
+	my $self = shift;
+	my $partner = shift;
+	return TRUE if $self->{moreSpecific} == $partner->{moreSpecific};
+	return FALSE;
+}
+=comment
+sub equals{
+	my ($self, $partner) = @_;
+	#my $partner = shift;
+	
+	if($self->{prefix} eq $partner->{prefix} and $self->{moreSpecific} eq $partner->{moreSpecific}){
+		return TRUE;
+	}
+	return FALSE;
+}
+=end
 
 =head2 matches
 

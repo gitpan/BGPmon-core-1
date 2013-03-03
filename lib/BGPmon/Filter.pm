@@ -15,7 +15,11 @@ BEGIN{
 	our $VERSION = '1.07';
 	our $AUTOLOAD;
 	our @ISA = qw(Exporter);
-	our @EXPORT_OK = qw(init parse_xml_msg parse_config_file toString reset get_error_msg get_error_code matches printFilters);
+	our @EXPORT_OK = qw(init parse_xml_msg parse_config_file 
+		condense_prefs toString reset get_error_msg 
+		get_error_code matches printFilters get_num_IPv4_prefs 
+		get_num_IPv6_prefs get_num_ASes get_num_ip_addrs 
+		get_tot_num_filters);
 }
 
 
@@ -437,11 +441,153 @@ sub parse_config_file{
 	close($file);
 
 
+
 	$error_code{$fname} = NO_ERROR_CODE;
 	$error_msg{$fname} = NO_ERROR_MSG;
 
 	return 0;
 }
+
+=head2 get_num_IPv4_prefs
+
+Will count the number of IPv4 prefixes it has parsed from the configuration
+file and return the integer
+
+Input: None
+Output : Integer
+=cut
+sub get_num_IPv4_prefs{
+	my $toReturn = scalar(@v4prefixes);
+	return $toReturn;
+}
+
+=head2 get_num_IPv6_prefs
+
+Will count the number of IPv6 prefixes it has parsed from the configuration
+file and return the integer
+
+Input: None
+Output : Integer
+=cut
+sub get_num_IPv6_prefs{
+	my $toReturn = scalar(@v6prefixes);
+	return $toReturn;
+}
+
+
+=head2 get_num_ASes
+
+Will count the number of ASes it has parsed from the configuration
+file and return the integer
+
+Input: None
+Output : Integer
+=cut
+sub get_num_ASes{
+	my $toReturn = scalar(@asNumbers);
+	return $toReturn;
+}
+
+
+
+=head2 get_num_ip_addrs
+
+Will count the number of IPv4 addresses it has parsed from the configuration
+file and return the integer
+
+Input: None
+Output : Integer
+=cut
+sub get_num_ip_addrs{
+	my $toReturn = scalar(@addresses);
+	return $toReturn;
+}
+
+=head2 get_total_num_filters
+
+Will tally all filters the module will look for per message and return
+the interger
+
+Input: None
+Output : Integer
+
+=cut
+sub get_total_num_filters{
+	my $toReturn = 0;
+	$toReturn += scalar(@v4prefixes);
+	$toReturn += scalar(@v6prefixes);
+	$toReturn += scalar(@asNumbers);
+	$toReturn += scalar(@addresses);
+	return $toReturn;
+}
+
+
+=head2 condense__prefs
+
+Will try to aggregate IPv4 and IPv6 prefixes where possible.  This is used to reduce
+overhead that the filter script may experience later.  Please note that the
+parse_config_file must be ran beforehand.
+
+Input: None
+
+Output: 0 if there is no error
+        1 if an error occured
+
+
+=cut
+sub condense_prefs{
+	
+	##Starting with IPv4
+	#Will continuously agg. addresses where it can until none are left
+	my $found = TRUE;
+	while($found){
+		$found = FALSE;
+		for( my $i = 0; $i < scalar(@v4prefixes); $i++){
+			my $currPref = $v4prefixes[$i];
+			for(my $k = $i+1; $k < scalar(@v4prefixes); $k++){
+				my $thisPref = $v4prefixes[$k];
+				next if not $currPref->matchSpecific($thisPref);
+
+				if($currPref->canAggregateWith($thisPref)){
+					my $newPref = $currPref->getAggregate($thisPref);
+					splice @v4prefixes, $k, 1;
+					splice @v4prefixes, $i, 1;
+					my $np = new BGPmon::Filter::Prefix(4, 
+						$newPref, $currPref->{moreSpecific}); 
+					push(@v4prefixes, $np);
+					$found = TRUE;
+				}
+			}
+		}
+	}
+
+	##Starting with IPv6
+	#Will continuously agg. addresses where it can until none are left
+	$found = TRUE;
+	while($found){
+		$found = FALSE;
+		for( my $i = 0; $i < scalar(@v6prefixes); $i++){
+			my $currPref = $v6prefixes[$i];
+			for(my $k = $i+1; $k < scalar(@v6prefixes); $k++){
+				my $thisPref = $v6prefixes[$k];
+				next if not $currPref->matchSpecific($thisPref);
+
+				if($currPref->canAggregateWith($thisPref)){
+					my $newPref = $currPref->getAggregate($thisPref);
+					splice @v6prefixes, $k, 1;
+					splice @v6prefixes, $i, 1;
+					my $np = new BGPmon::Filter::Prefix(6, 
+						$newPref, $currPref->{moreSpecific}); 
+					push(@v6prefixes, $np);
+					$found = TRUE;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 
 
 =head2 printFilters
@@ -828,6 +974,6 @@ OTHER DEALINGS IN THE SOFTWARE.\
 
 File: Filter.pm
 Authors: M. Lawrence Weikum
-Date: 5 September 2012
+Date: 3 March 2013
 =cut
 

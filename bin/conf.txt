@@ -1,0 +1,4 @@
+server = 129.82.138.26
+port = 50001
+listening_port = 60000
+prefix_file = /home/lawrence/bgpmon-tools/BGPmon-core/bin/testPrefs.txt
