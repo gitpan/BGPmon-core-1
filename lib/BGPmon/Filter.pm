@@ -8,15 +8,15 @@ use BGPmon::Filter::Prefix;
 use BGPmon::Filter::Address;
 use Net::IP;
 use Regexp::IPv6 qw($IPv6_re);
-
+use Data::Dumper;
 
 BEGIN{
 	require Exporter;
-	our $VERSION = '1.07';
+	our $VERSION = '1.09';
 	our $AUTOLOAD;
 	our @ISA = qw(Exporter);
 	our @EXPORT_OK = qw(init parse_xml_msg parse_config_file 
-		condense_prefs toString reset get_error_msg 
+		condense_prefs optimize_prefs toString reset get_error_msg 
 		get_error_code matches printFilters get_num_IPv4_prefs 
 		get_num_IPv6_prefs get_num_ASes get_num_ip_addrs 
 		get_tot_num_filters);
@@ -55,7 +55,9 @@ use constant NO_MSG_GIVEN_MSG => "No XML message was given.";
 # Variables to hold the prefixes we'd like to filter
 my @v6prefixes = ();
 my @v4prefixes = ();
-my @asNumbers = ();
+my %v4prefHash = ();
+my $v4Count = 0;
+my %asNumbers = ();
 my @addresses = ();
 my $prefixFilename;
 
@@ -92,6 +94,26 @@ if(BGPmon::Filter::parse_config_file('config_file.txt')){
 	my $err_code = BGPmon::Filter::get_error_code('parse_config_file');
 	
 	my $err_msg = BGPmon::Filter::get_error_msg('parse_config_file');
+	
+	print "$err_code : $err_msg\n";
+	
+	exit 1;
+}
+if(BGPmon::Filter::condense_prefs()){
+	
+	my $err_code = BGPmon::Filter::get_error_code('condense_prefs');
+	
+	my $err_msg = BGPmon::Filter::get_error_msg('condense_prefs');
+	
+	print "$err_code : $err_msg\n";
+	
+	exit 1;
+}
+if(BGPmon::Filter::parse_optimize_prefs()){
+	
+	my $err_code = BGPmon::Filter::get_error_code('optimize_prefs');
+	
+	my $err_msg = BGPmon::Filter::get_error_msg('optimize_prefs');
 	
 	print "$err_code : $err_msg\n";
 	
@@ -180,9 +202,6 @@ sub reset{
 	foreach(@v4prefixes){
 		$_ = undef;
 	}
-	foreach(@asNumbers){
-		$_ = undef;
-	}
 	foreach(@addresses){
 		$_ = undef;
 	}
@@ -196,8 +215,10 @@ sub reset{
 		$_ = undef;
 	}
 	@v4prefixes = ();
+	%v4prefHash = ();
+	$v4Count = 0;
 	@v6prefixes = ();
-	@asNumbers = ();
+	%asNumbers = ();
 	@addresses = ();
 	@v4 = ();
 	@v6 = ();
@@ -300,6 +321,94 @@ sub ipv4_chkip($) {
 }
 
 
+sub addV4prefixToHash{
+	my $prefix = shift;
+	my $prefObj = shift;
+
+	my @pieces = split('/',$prefix);
+	my @ips = split /\./, $pieces[0];
+
+
+	#firstOct->{secondOct->{thirdOctet->{fourthOctet->{prefixObject
+
+	if(!exists $v4prefHash{$ips[0]}) {
+		$v4prefHash{$ips[0]} = {};
+	}
+	if(!exists $v4prefHash{$ips[0]}->{$ips[1]}){
+		$v4prefHash{$ips[0]}->{$ips[1]} = {};
+	}
+	if(!exists $v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]}){
+		$v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]} = {};
+	}
+	if(!exists $v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]}->{$ips[3]}){
+		$v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]}->{$ips[3]} = [];
+	}
+
+
+	push($v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]}->{$ips[3]}, $prefObj);
+	$v4Count += 1;
+}
+
+
+sub getChildren{
+	my $hashRef = shift;
+
+	my @toReturn = ();
+
+	foreach my $key(keys % $hashRef){
+		my $item = $hashRef->{$key};
+		#print "$item\n";
+		if(ref($item) eq 'HASH'){ #still going through the hashes
+			push(@toReturn, @{getChildren($item)});
+		}
+		elsif(ref($item) eq 'ARRAY'){
+			my @toAdd = @{$item};
+			#print Dumper @toAdd;
+			push(@toReturn, @toAdd);
+		}
+		#else{ #finally found the prefixes
+		#	push(@toReturn, @{ $hashRef->{$key} });
+		#}
+
+	}
+
+	#print "Returning @toReturn\n";
+	#print "getChildren\n";
+	#print Dumper @toReturn;
+	return \@toReturn;
+
+}
+
+sub getV4comparisons{
+	my $prefix = shift;
+	my @pieces = split /\//, $prefix;
+	my $ip = $pieces[0];
+	my @ips = split /\./, $ip;
+
+	if(!exists $v4prefHash{$ips[0]}) { 
+		return getChildren(\%v4prefHash);
+	}
+	elsif(!exists $v4prefHash{$ips[0]}->{$ips[1]}) {
+		return getChildren($v4prefHash{$ips[0]});
+	}
+	elsif(!exists $v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]}) {
+		return getChildren($v4prefHash{$ips[0]}->{$ips[1]});
+	}
+	elsif(!exists $v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]}->{$ips[3]}) {
+		return getChildren($v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]});
+	}
+	elsif(exists $v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]}->{$ips[3]}){
+		my $toReturn = $v4prefHash{$ips[0]}->{$ips[1]}->{$ips[2]}->{$ips[3]}; #returns the array of prefixes with these four octets 
+		return $toReturn;
+	}
+	else{
+		#TODO make lookup error
+		return undef;
+	}
+
+}
+
+
 
 
 =head2 parse_config_file
@@ -354,7 +463,7 @@ sub parse_config_file{
 		if($lineArray[0] =~ /[aA][sS]/){
 			if($lineArray[1] > 0 and $lineArray[1] < 65536){
 				my $temp = $lineArray[1];
-				push(@asNumbers, $temp);
+				$asNumbers{$temp} = 1;
 			}
 			else{
 				$error_code{$fname} = INVALID_AS_CONFIG;
@@ -366,22 +475,23 @@ sub parse_config_file{
 		elsif($lineArray[0] =~ /[iI][pP][vV][4]/){
 			#Making sure whatever is next is either a valid prefix or IPv4 address
 			my $ipcheck = ipv4_chkip($lineArray[1]);
-			print "Skipping $line\n" unless $ipcheck;
-			next unless $ipcheck;
-
+			unless($ipcheck) {
+				$error_code{$fname} = INVALID_IPV4_CONFIG;
+				$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG.':'.$line;
+				return 1;
+			}
 			#Decerning if we have a prefix or IPv4 address
 			if($ipcheck =~ /\//){ #prefix
-				if(!$lineArray[2] =~ m/[mMlL][sS]/){
-					#$error_code{$fname} = INVALID_IPV4_CONFIG;
-					#$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG;
-					#return 1;
-					print "Skippnig $line\n";
-					next;
+				if(!exists($lineArray[2]) or !$lineArray[2] =~ m/[mMlL][sS]/){
+					$error_code{$fname} = INVALID_IPV4_CONFIG;
+					$error_msg{$fname} = INVALID_IPV4_CONFIG_MSG.':'.$line;
+					return 1;
+					#print "Skippnig $line\n";
+					#next;
 				}
 				# Adding prefix to the list since it's okay
 				my $moreSpecific = $lineArray[2] =~ m/[mM][sS]/;
-				my $temp = new BGPmon::Filter::Prefix(4, 
-						$lineArray[1], $moreSpecific); 
+				my $temp = new BGPmon::Filter::Prefix(4, $lineArray[1], $moreSpecific); 
 				push(@v4prefixes, $temp);
 			}
 			else{#IPv4 address
@@ -439,13 +549,28 @@ sub parse_config_file{
 
 	#closing the file
 	close($file);
-
-
+	#condensePrefs(); #aggregates where possible
+	#optimizePrefs(); #puts them in the multilayer hash for faster lookups
 
 	$error_code{$fname} = NO_ERROR_CODE;
 	$error_msg{$fname} = NO_ERROR_MSG;
 
 	return 0;
+}
+
+
+
+sub optimize_prefs{
+	foreach(@v4prefixes){
+		my $temp = $_;
+		addV4prefixToHash($temp->prefix(), $temp);
+	}
+
+	#TODO put in error codes
+
+	return 0;
+
+
 }
 
 =head2 get_num_IPv4_prefs
@@ -459,6 +584,7 @@ Output : Integer
 sub get_num_IPv4_prefs{
 	my $toReturn = scalar(@v4prefixes);
 	return $toReturn;
+#	return $v4Count;
 }
 
 =head2 get_num_IPv6_prefs
@@ -484,7 +610,7 @@ Input: None
 Output : Integer
 =cut
 sub get_num_ASes{
-	my $toReturn = scalar(@asNumbers);
+	my $toReturn = scalar(keys %asNumbers);
 	return $toReturn;
 }
 
@@ -515,8 +641,9 @@ Output : Integer
 sub get_total_num_filters{
 	my $toReturn = 0;
 	$toReturn += scalar(@v4prefixes);
+#	$toReturn += $v4Count;
 	$toReturn += scalar(@v6prefixes);
-	$toReturn += scalar(@asNumbers);
+	$toReturn += scalar(%asNumbers);
 	$toReturn += scalar(@addresses);
 	return $toReturn;
 }
@@ -627,7 +754,7 @@ sub printFilters(){
 		my $temp = $_->toString();
 		print "$temp\n";
 	}
-	foreach(@asNumbers){
+	foreach(keys %asNumbers){
 		print "$_\n";
 	}
 	foreach(@addresses){
@@ -837,30 +964,30 @@ sub matches{
 
 	# Checking to see if any of these AS numbers are ones we're looking for.
 	if(scalar @as > 0){
-		foreach(@asNumbers){
-			my $myAS = $_;
-			foreach(@as){
-				if($myAS eq $_){
-					return TRUE;
-				}
-			}
+		foreach(@as){
+			return TRUE if defined $asNumbers{$_};
 		}
 	}
 
 
 
-	# Checking to see if any of the v4 addresses are matches.
+	# Checking to see if any of the v4 prefixes are matches.
 	if(scalar @v4 > 0){
-		foreach (@v4prefixes){
-			my $v4Prefix = $_;
-			# Seeing if we need to keep on to the message
-			foreach(@v4){
-				my $ipPrefAddr = $_;
-				if($v4Prefix->matches($ipPrefAddr)){
-					return TRUE;
-				}
+		foreach(@v4){
+			my $ipPrefAddr = $_;
+			my @toCheck = @{getV4comparisons($_)};
+			#print Dumper @toCheck;
+			foreach(@toCheck){
+				my $v4Prefix = $_;
+				#print "IP: $v4Prefix\n";
+				return TRUE if $v4Prefix->matches($ipPrefAddr);
 			}
+
 		}
+	}
+
+	#Checking to see if any of the v4 addresses are a match
+	if(scalar @v4 > 0){
 		foreach(@addresses){
 			my $addr = $_;
 			foreach(@v4){

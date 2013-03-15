@@ -1,0 +1,4 @@
+server = 129.82.138.26
+prefix_file = temp.txt
+debug = 1
+stdout = 1

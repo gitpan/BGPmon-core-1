@@ -1,5 +1,5 @@
 package BGPmon::Configure;
-our $VERSION = '1.08';
+our $VERSION = '1.09';
 
 use 5.006;
 use strict;

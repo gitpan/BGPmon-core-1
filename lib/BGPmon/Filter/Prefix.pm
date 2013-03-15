@@ -1,5 +1,5 @@
 package BGPmon::Filter::Prefix;
-our $VERSION = '1.08';
+our $VERSION = '1.09';
 use strict;
 use warnings;
 use constant TRUE => 1;
@@ -247,6 +247,14 @@ sub toString{
 
 	return $toReturn;
 }
+
+
+sub prefix{
+	my ($self) = shift;
+	return $self->{prefix};
+}
+
+
 
 =head2 getVersion
 

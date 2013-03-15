@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-our $VERSION = '1.08';
+our $VERSION = '1.09';
 use strict;
 use warnings;
 use constant FALSE => 0;
@@ -257,7 +257,6 @@ $sock = new IO::Socket::INET (
 print "Listening on port $myPort.\n" if $debug;
 log_info("Successful! Listening for client connections on $myPort.");
 
-
 #Initializing filter and parsing prefix configuration file
 log_info("Initializing BGPmon::Filter module.");
 if(BGPmon::Filter::init()){
@@ -271,6 +270,11 @@ log_info("Parsing $prefixFilename with BGPmon::Filter.");
 if(BGPmon::Filter::parse_config_file($prefixFilename)){
 	print "Coudln't parse the filter configuration file.  Aborting\n";
 	log_err("Error parsing configuration file $prefixFilename.");
+
+	my $error = BGPmon::Filter::get_error_code('parse_config_file');
+	log_error($error);
+
+
 	exit 1;
 }
 log_info("Parsed configuration file $prefixFilename.");
@@ -296,6 +300,18 @@ $numPrefs = BGPmon::Filter::get_num_IPv6_prefs();
 log_info("total IPv6 prefixes after condensing: $numPrefs");
 $numPrefs= BGPmon::Filter::get_total_num_filters();
 log_info("Total number of active filters:$numPrefs");
+
+
+log_info("Optimizing prefixes for future comparisions.");
+if(BGPmon::Filter::optimize_prefs()){
+	print "Error optimizing prefixes for quick lookups.\n";
+	log_err("Error optimizing prefixes for quick lookups.");
+	exit 1;
+}
+log_info("Optimizing complete");
+
+
+
 
 if($debug){
 	print "$numPrefs Active filters:\n";
@@ -667,7 +683,7 @@ sub parser{
 
 		#Checking to see if the message has addresses/AS#'s we want, then handling message to stdout, clients, and file.
 		if(BGPmon::Filter::matches($$nextMsg)){
-			log_debug("Positive match for message:\n$$nextMsg");
+			log_info("Positive match for message:\n$$nextMsg");
 			{
 				lock($printLock);
 				print "$$nextMsg\n\n" if $stdoutPrint;
