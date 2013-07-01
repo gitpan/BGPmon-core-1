@@ -1,4 +1,4 @@
-package BGPmon::Fetch::Client;
+package BGPmon::Fetch2::Client2;
 our $VERSION = '1.092';
 
 use 5.006;
@@ -213,7 +213,7 @@ sub read_xml_message {
 
     # If there is a socket with data.
     if (scalar(@ready) > 0) {
-        while ($read_buffer !~ /<BGP_MESSAGE.*?BGP_MESSAGE>/) {
+        while ($read_buffer !~ /<BGP_MONITOR_MESSAGE.*?BGP_MONITOR_MESSAGE>/) {
             $bytesread = sysread($sock, $tempbuf, $chunksize);
             if (!defined $bytesread) {
                 $error_code{$fname} = XML_MSG_READ_ERROR_CODE;
@@ -231,10 +231,10 @@ sub read_xml_message {
         }
 
         # at this point I have a complete message OR my socket closed
-        if ($read_buffer =~ /^(<BGP_MESSAGE.*?BGP_MESSAGE>)/) {
+        if ($read_buffer =~ /^(<BGP_MONITOR_MESSAGE.*?BGP_MONITOR_MESSAGE>)/) {
             $complete_xml_msg = $1;
             $msgs_read++;
-            $read_buffer =~ s/^<BGP_MESSAGE.*?BGP_MESSAGE>//;
+            $read_buffer =~ s/^<BGP_MONITOR_MESSAGE.*?BGP_MONITOR_MESSAGE>//;
         } else {
             $error_code{$fname} = UNKNOWN_ERROR_CODE;
             $error_msg{$fname} = UNKNOWN_ERROR_MSG;

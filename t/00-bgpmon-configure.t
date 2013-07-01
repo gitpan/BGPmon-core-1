@@ -9,16 +9,23 @@ BEGIN {
     use_ok( 'BGPmon::Configure' );
 }
 use BGPmon::Configure;
-
 done_testing();
 
 exit;
+
+
+my $resp = `pwd`;
+my $location = 't/';
+if($resp =~ m/bgpmon-tools\/BGPmon-core\/t/){
+        $location = '';
+}
+
 #---------------------   First Check For Correct Operation ---------------------
 
 # given a list of parameters and a configuration file,  test those parameters
 sub check_parameters {
     my ($params_file, $config_file) = @_;
-    $config_file = "./data/Configure_test_config1.txt";
+    $config_file = $location."Configure_test_config1.txt";
     ok(-e $config_file, "Locating test configuration file $config_file");
 	$params_file = "./data/Configure_test_params1.txt";
     ok(-e $config_file, "Locating test  file $config_file");
@@ -26,9 +33,9 @@ sub check_parameters {
 
 
 # sample config file to use for testing
-my $config_file = "./data/Configure_test_config1.txt";
+my $config_file = $location."data/Configure_test_config1.txt";
 ok(-e $config_file, "Locating test configuration file $config_file");
-my $params_file = "./data/Configure_test_params1.txt";
+my $params_file = $location."data/Configure_test_params1.txt";
 ok(-e $config_file, "Locating test  file $config_file");
 
 # lets define one of each parameter type

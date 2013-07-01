@@ -14,7 +14,15 @@ my $second_msg = "<BGP_MESSAGE xmlns=\"urn:ietf:params:xml:ns:xfb-0.4\" length=\
 
 #set the data directory
 #my $data_dir = `echo -n \`pwd\``."/t/data";
-my $data_dir = 't';
+#my $data_dir = 't';
+
+my $resp = `pwd`;
+my $location = 't/';
+if($resp =~ m/bgpmon-tools\/BGPmon-core\/t/){
+        $location = '';
+}
+
+
 
 my $ret = undef;    #Return value of calls
 my $err = undef;    #Log message
@@ -48,17 +56,17 @@ is(get_error_code("connect_file"),301, "connect_file - check error code");
 
 #Connect w/ 2 arguments
 #Test should work because connect_file only SHIFTs out the first argument
-$ret = connect_file("$data_dir/bgpmon-fetch-file-valid.xml.gz", "Makefile");
+$ret = connect_file($location."bgpmon-fetch-file-valid.xml.gz", "Makefile");
 is($ret,0,"connect_file - too many arguments");
 close_connection();
 
 #Connect to a valid, gzipped file
-$ret = connect_file("$data_dir/bgpmon-fetch-file-valid.xml.gz");
+$ret = connect_file($location."bgpmon-fetch-file-valid.xml.gz");
 is($ret,0,"connect_file - valid gzip archive");
 close_connection();
 
 #Connect to a compressed archive file that is missing ARCHIVER tags
-$ret = connect_file("$data_dir/bgpmon-fetch-file-no-archiver.xml.bz2");
+$ret = connect_file($location."bgpmon-fetch-file-no-archiver.xml.bz2");
 ok( is_connected() ,"connect_file - valid XML archive (compressed)");
 
 #Try to read the first message out of the file
@@ -70,7 +78,7 @@ is(get_error_code("read_xml_message"),313,"read_xml_message - error code");
 
 #Disconnect and reconnect to a valid archive file.
 close_connection();
-$ret = connect_file("$data_dir/bgpmon-fetch-file-valid.xml.gz");
+$ret = connect_file($location."bgpmon-fetch-file-valid.xml.gz");
 ok( is_connected() ,"connect_file - valid XML archive");
 
 #Read the first message out of the file again, and confirm we are still connected.
@@ -81,7 +89,7 @@ ok( is_connected(),"read_xml_message - first message");
 
 #Attempt to connect to another file while
 #still connected to a file
-$ret = connect_file("$data_dir/bgpmon-translator-dup-archiver-msg.xml");
+$ret = connect_file($location."bgpmon-translator-dup-archiver-msg.xml");
 is($ret,1,"confirm no new connection");
 is(get_error_code("connect_file"),303,"connect_file - connect while already connected");
 
@@ -106,7 +114,7 @@ $msg = read_xml_message();
 is(get_error_code("read_xml_message"),302,"read_xml_message - read without connection");
 
 # read from a non-existant file
-$ret = connect_file("$data_dir/updates.20120101.0000.xml.bz2");
+$ret = connect_file($location."updates.20120101.0000.xml.bz2");
 is($ret,1,"connect_file - nonexistent file");
 is(get_error_code("connect_file"),304,"connect_file - Nonexistent file");
 
@@ -118,12 +126,12 @@ is(get_error_code("connect_file"),307,"connect_file - bad permissions");
 =cut
 
 # read from a wrong format file
-$ret = connect_file("$data_dir/bgpmon-fetch-file-bgpdump-001");
+$ret = connect_file($location."bgpmon-fetch-file-bgpdump-001");
 is($ret,1,"connect_file - bgpdump format");
 ok(!is_connected(),"connect_file - wrong format");
 
 # start reading, delete file, continue reading
-$ret = connect_file("$data_dir/bgpmon-fetch-file-valid.xml.gz");
+$ret = connect_file($location."bgpmon-fetch-file-valid.xml.gz");
 ok( is_connected(),"confirm file connection");
 $msg = read_xml_message();
 $msg = read_xml_message();
@@ -132,21 +140,22 @@ $msg = read_xml_message();
 is($msg,undef,"read_xml_message - delete a file mid-read");
 is(get_error_code("read_xml_message"),304,"read_xml_message - check error code on deleted file mid-read");
 
-if( !(-e "$data_dir/compress_test.gz") ){
-    `echo "This is an uncompressed file" > $data_dir/compress_test.gz`;
+if( !(-e $location."/compress_test.gz") ){
+	my $te = $location."compress_test.gz";
+    `echo "This is an uncompressed file" > $te`;
 }
 # decompress an uncompressed file and try to connect
 #This will fail because the scratch directory has not been initialized
-$ret = BGPmon::Fetch::File::decompress_file("$data_dir/compress_test.gz");
+$ret = BGPmon::Fetch::File::decompress_file($location."compress_test.gz");
 isnt($ret,undef,"decompress_file - corrupt compressed file");
 #Try actually connecting to the file this time
-$ret = connect_file("$data_dir/compress_test.gz");
+$ret = connect_file($location."compress_test.gz");
 is($ret,1,"connect_file - connect to binary file");
 ok(!is_connected(),"connect_file - not connected to binary file");
 
 #Connect to a file, read a message, change the permissions, try to read again
 #This should work because permissions only get checked once, not per-read
-$ret = connect_file("$data_dir/bgpmon-fetch-file-valid.xml.gz");
+$ret = connect_file($location."bgpmon-fetch-file-valid.xml.gz");
 ok( is_connected(),"confirm file connection");
 $msg = read_xml_message();
 `chmod a-r "/tmp/BGP.File.$$/extract_bgp.$$"`;
@@ -155,7 +164,7 @@ ok(defined($msg),"read_xml_message - chmod mid-read");
 close_connection();
 
 #Connect to a file, read a message, move the file, try to read again
-$ret = connect_file("$data_dir/bgpmon-fetch-file-valid.xml.gz");
+$ret = connect_file($location."bgpmon-fetch-file-valid.xml.gz");
 ok( is_connected(),"confirm file connection");
 $msg = read_xml_message();
 ok(defined($msg),"read_xml_message - read before move");
@@ -165,14 +174,14 @@ $msg = read_xml_message();
 is($msg,undef,"read_xml_message - move mid-read");
 
 #Connect to a file with a broken XML message
-$ret = connect_file("$data_dir/bad_xml_test.bz2");
+$ret = connect_file($location."bad_xml_test.bz2");
 ok(is_connected(),"confirm file connection");
 $msg = read_xml_message();
 ok(!defined($msg),"read_xml_message - detect bad XML");
 close_connection();
 
 #Connect to a file with an extra ARCHIVER/START message in the middle
-$ret = connect_file("$data_dir/bgpmon-translator-dup-archiver-msg.xml");
+$ret = connect_file($location."bgpmon-translator-dup-archiver-msg.xml");
 ok(is_connected(),"confirm file connection");
 $msg = read_xml_message();
 $msg = read_xml_message();
@@ -184,7 +193,7 @@ is(get_error_code("read_xml_message"),314,"read_xml_message - duplicate ARCHIVER
 $ret = close_connection();
 $ret = init_bgpdata('ignore_data_errors' => 1,'ignore_incomplete_data' => 1);
 is($ret,1,'init_bgpdata - set the flags w/ default directory');
-$ret = connect_file("$data_dir/bgpmon-fetch-file-no-archiver.xml.bz2");
+$ret = connect_file($location."bgpmon-fetch-file-no-archiver.xml.bz2");
 ok( is_connected() ,"connect_file - valid XML archive (compressed)");
 
 #Try to read the first message out of the file

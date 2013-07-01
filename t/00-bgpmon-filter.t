@@ -29,7 +29,7 @@ ok($retVal == 0, 'Init Test');
 
 
 #Testing Reset
-my $resetRetVal = BGPmon::Filter::reset();
+my $resetRetVal = BGPmon::Filter::filterReset();
 is($resetRetVal, 0, 'Reset Test');
 
 
@@ -45,7 +45,7 @@ BGPmon::Filter::init();
 BGPmon::Filter::parse_config_file("madeupfilename.txt");
 my $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::UNOPANABLE_CONFIG_FILE, "File Not Found");
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 
 #--test for file w/o permissions
 =comment
@@ -60,7 +60,7 @@ BGPmon::Filter::parse_config_file($location+"bgpmon-filter-config-no-permissions
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::UNOPANABLE_CONFIG_FILE, "File w/o Permissions");
 
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 ## put permissions back
 $output = `chmod 555 t/bgpmon-filter-config-no-permissions.txt 2>&1`;
 if($?){
@@ -73,28 +73,28 @@ BGPmon::Filter::init();
 BGPmon::Filter::parse_config_file($location."bgpmon-filter-config-bad-ipv4.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_IPV4_CONFIG, "Bad IPv4");
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 
 #--test for file w/ bad ipv6
 BGPmon::Filter::init();
 BGPmon::Filter::parse_config_file($location."bgpmon-filter-config-bad-ipv6.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_IPV6_CONFIG, "Bad IPv6");
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 
 #--test for file w/ bad AS
 BGPmon::Filter::init();
 BGPmon::Filter::parse_config_file($location."bgpmon-filter-config-bad-as.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_AS_CONFIG, "Bad AS");
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 
 #--test for file w/ incorrect ms/ls
 BGPmon::Filter::init();
 BGPmon::Filter::parse_config_file($location."bgpmon-filter-config-incomplete-line.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::INVALID_IPV4_CONFIG, "Incomplete Line");
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 
 
 #--test for file w/ unkown parameter
@@ -102,14 +102,14 @@ BGPmon::Filter::init();
 BGPmon::Filter::parse_config_file($location."bgpmon-filter-config-bad-line.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::UNKNOWN_CONFIG, "Unknown Parameter");
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 
 #--test for fully correct file.
 BGPmon::Filter::init();
 BGPmon::Filter::parse_config_file($location."bgpmon-filter-config.txt");
 $errCode = BGPmon::Filter::get_error_code('parse_config_file');
 is($errCode, BGPmon::Filter::NO_ERROR_CODE, "No Error Code");
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 
 
 
@@ -177,7 +177,7 @@ is($res5, TRUE, "XML AS Last in AS_PATH");
 
 
 #--testing more specific prefix matching works correctly
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 BGPmon::Filter::parse_config_file($location.'bgpmon-filter-config-ms.txt');
 BGPmon::Filter::condense_prefs();
 BGPmon::Filter::optimize_prefs();
@@ -187,7 +187,7 @@ is($resa, TRUE, "More Specific Prefix Matching");
 
 
 #--testing less specific prefix matching works correctly
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 BGPmon::Filter::parse_config_file($location.'bgpmon-filter-config-ls.txt');
 BGPmon::Filter::condense_prefs();
 BGPmon::Filter::optimize_prefs();
@@ -198,7 +198,7 @@ is($resb, TRUE, "Less Specific Prefix Matching");
 
 #--tsting that IPv4 address matching works correctly
 #Note - this depends on the $xml4msg from the Less Specific Prefix Matching test.
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 BGPmon::Filter::parse_config_file($location.'bgpmon-filter-config-ip.txt');
 BGPmon::Filter::condense_prefs();
 BGPmon::Filter::optimize_prefs();
@@ -207,13 +207,29 @@ is($rescc, TRUE, "IPv4 Address Matching");
 
 #--tsting that IPv4 address matching works correctly
 #Note - this depends on the $xml4msg from the Less Specific Prefix Matching test.
-BGPmon::Filter::reset();
+BGPmon::Filter::filterReset();
 BGPmon::Filter::parse_config_file($location.'bgpmon-filter-config-ip.txt');
 BGPmon::Filter::condense_prefs();
 BGPmon::Filter::optimize_prefs();
 $xml4msg = '<BGP_MESSAGE length="00001140" version="0.4" xmlns="urn:ietf:params:xml:ns:xfb-0.4" type_value="2" type="UPDATE"><BGPMON_SEQ id="127893688" seq_num="1541418969"/><TIME timestamp="1346459370" datetime="2012-09-01T00:29:30Z" precision_time="0"/><PEERING as_num_len="2"><SRC_ADDR><ADDRESS>187.16.217.154</ADDRESS><AFI value="1">IPV4</AFI></SRC_ADDR><SRC_PORT>179</SRC_PORT><SRC_AS>53175</SRC_AS><DST_ADDR><ADDRESS>200.160.6.217</ADDRESS><AFI value="1">IPV4</AFI></DST_ADDR><DST_PORT>179</DST_PORT><DST_AS>6447</DST_AS><BGPID>0.0.0.0</BGPID></PEERING><ASCII_MSG length="31"><MARKER length="16">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</MARKER><UPDATE withdrawn_len="8" path_attr_len="0"><WITHDRAWN count="2"><PREFIX label="WITH"><ADDRESS>2.2.2.0/24</ADDRESS><AFI value="1">IPV4</AFI><SAFI value="1">UNICAST</SAFI></PREFIX><PREFIX label="WITH"><ADDRESS>1.1.1.0/24</ADDRESS><AFI value="1">IPV4</AFI><SAFI value="1">UNICAST</SAFI></PREFIX></WITHDRAWN><PATH_ATTRIBUTES count="0"/><NLRI count="0"/></UPDATE></ASCII_MSG><OCTET_MSG><OCTETS length="31">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF001F0200081896C41D14CD5EE00000</OCTETS></OCTET_MSG></BGP_MESSAGE>';
 $rescc = BGPmon::Filter::matches($xml4msg);
 is($rescc, FALSE, "IPv4 Address Matching");
+
+
+
+
+BGPmon::Filter::filterReset();
+BGPmon::Filter::parse_config_file($location.'bgpmon-filter-config-all-ms.txt');
+BGPmon::Filter::condense_prefs();
+BGPmon::Filter::optimize_prefs();
+$xml4msg = '<BGP_MESSAGE length="00001140" version="0.4" xmlns="urn:ietf:params:xml:ns:xfb-0.4" type_value="2" type="UPDATE"><BGPMON_SEQ id="127893688" seq_num="1541418969"/><TIME timestamp="1346459370" datetime="2012-09-01T00:29:30Z" precision_time="0"/><PEERING as_num_len="2"><SRC_ADDR><ADDRESS>187.16.217.154</ADDRESS><AFI value="1">IPV4</AFI></SRC_ADDR><SRC_PORT>179</SRC_PORT><SRC_AS>53175</SRC_AS><DST_ADDR><ADDRESS>200.160.6.217</ADDRESS><AFI value="1">IPV4</AFI></DST_ADDR><DST_PORT>179</DST_PORT><DST_AS>6447</DST_AS><BGPID>0.0.0.0</BGPID></PEERING><ASCII_MSG length="31"><MARKER length="16">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</MARKER><UPDATE withdrawn_len="8" path_attr_len="0"><WITHDRAWN count="2"><PREFIX label="WITH"><ADDRESS>150.196.29.0/24</ADDRESS><AFI value="1">IPV4</AFI><SAFI value="1">UNICAST</SAFI></PREFIX><PREFIX label="WITH"><ADDRESS>205.94.224.0/20</ADDRESS><AFI value="1">IPV4</AFI><SAFI value="1">UNICAST</SAFI></PREFIX></WITHDRAWN><PATH_ATTRIBUTES count="0"/><NLRI count="0"/></UPDATE></ASCII_MSG><OCTET_MSG><OCTETS length="31">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF001F0200081896C41D14CD5EE00000</OCTETS></OCTET_MSG></BGP_MESSAGE>';
+my $num = BGPmon::Filter::get_total_num_filters();
+is($num, 1, "Number of Filters");
+$rescc = BGPmon::Filter::matches($xml4msg);
+is($rescc, TRUE, "Filter All");
+
+
+
 
 
 

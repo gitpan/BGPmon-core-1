@@ -6,20 +6,22 @@ use constant TRUE => 1;
 use BGPmon::Translator::XFB2PerlHash;
 use BGPmon::Filter::Prefix;
 use BGPmon::Filter::Address;
+use BGPmon::CPM::PList::Manager;
 use Net::IP;
 use Regexp::IPv6 qw($IPv6_re);
 use Data::Dumper;
+use threads;
+use threads::shared;
 
 BEGIN{
 	require Exporter;
-	our $VERSION = '1.09';
+	our $VERSION = '1.092';
 	our $AUTOLOAD;
 	our @ISA = qw(Exporter);
 	our @EXPORT_OK = qw(init parse_xml_msg parse_config_file 
-		condense_prefs optimize_prefs toString reset get_error_msg 
-		get_error_code matches printFilters get_num_IPv4_prefs 
-		get_num_IPv6_prefs get_num_ASes get_num_ip_addrs 
-		get_tot_num_filters);
+		parse_database_config toString filterReset get_error_msg get_error_code
+		matches  printFilters get_num_IPv4_prefs get_num_IPv6_prefs 
+		get_num_ASes get_num_ip_addrs get_tot_num_filters);
 }
 
 
@@ -29,7 +31,6 @@ my $progName = $0;
 # Variables to hold error codes and messages
 my %error_code;
 my %error_msg;
-my @function_names = ('init', 'parse_config_file', 'matches');
 
 use constant NO_ERROR_CODE => 0;
 use constant NO_ERROR_MSG => 'No Error. Relax with some tea.';
@@ -51,6 +52,12 @@ use constant UNKNOWN_CONFIG_MSG => "Invalid line in config file.";
 #Error codes for parsing the XML file.
 use constant NO_MSG_GIVEN => 540;
 use constant NO_MSG_GIVEN_MSG => "No XML message was given.";
+
+#Variable to handle locking
+my $lock = 1;
+share($lock);
+
+
 
 # Variables to hold the prefixes we'd like to filter
 my @v6prefixes = ();
@@ -94,26 +101,6 @@ if(BGPmon::Filter::parse_config_file('config_file.txt')){
 	my $err_code = BGPmon::Filter::get_error_code('parse_config_file');
 	
 	my $err_msg = BGPmon::Filter::get_error_msg('parse_config_file');
-	
-	print "$err_code : $err_msg\n";
-	
-	exit 1;
-}
-if(BGPmon::Filter::condense_prefs()){
-	
-	my $err_code = BGPmon::Filter::get_error_code('condense_prefs');
-	
-	my $err_msg = BGPmon::Filter::get_error_msg('condense_prefs');
-	
-	print "$err_code : $err_msg\n";
-	
-	exit 1;
-}
-if(BGPmon::Filter::parse_optimize_prefs()){
-	
-	my $err_code = BGPmon::Filter::get_error_code('optimize_prefs');
-	
-	my $err_msg = BGPmon::Filter::get_error_msg('optimize_prefs');
 	
 	print "$err_code : $err_msg\n";
 	
@@ -166,7 +153,7 @@ else{
 
 =head1 EXPORT
 
-init parse_xml_msg parse_config_file toString reset get_error_msg get_error_code matches printFilters
+init parse_xml_msg parse_config_file toString filterReset get_error_msg get_error_code matches printFilters
 
 
 
@@ -179,6 +166,7 @@ to be called once.
 
 =cut
 sub init{
+	lock($lock);
 	my $fname = 'init';
 
 	$error_code{$fname} = NO_ERROR_CODE;
@@ -188,13 +176,14 @@ sub init{
 }
 
 
-=head2 reset
+=head2 filterReset
 
 Resets the module's state values.
 
 =cut
-sub reset{
-	my $fname = 'reset';
+sub filterReset{
+	lock($lock);
+	my $fname = 'filterReset';
 
 	foreach(@v6prefixes){
 		$_ = undef;
@@ -245,6 +234,7 @@ Output: The message which represents the error stored from that function.
 
 =cut
 sub get_error_msg{
+	lock($lock);
 	my $str = shift;
 	my $fname = 'get_error_msg';
 	my $toReturn = $error_msg{$str};
@@ -261,6 +251,7 @@ Output: The code which represents the error stored from that function.
 
 =cut
 sub get_error_code{
+	lock($lock);
 	my $str = shift;
 	my $fname = 'get_error_code';
 	my $toReturn = $error_code{$str};
@@ -330,7 +321,6 @@ sub addV4prefixToHash{
 
 
 	#firstOct->{secondOct->{thirdOctet->{fourthOctet->{prefixObject
-
 	if(!exists $v4prefHash{$ips[0]}) {
 		$v4prefHash{$ips[0]} = {};
 	}
@@ -366,17 +356,8 @@ sub getChildren{
 			#print Dumper @toAdd;
 			push(@toReturn, @toAdd);
 		}
-		#else{ #finally found the prefixes
-		#	push(@toReturn, @{ $hashRef->{$key} });
-		#}
-
 	}
-
-	#print "Returning @toReturn\n";
-	#print "getChildren\n";
-	#print Dumper @toReturn;
 	return \@toReturn;
-
 }
 
 sub getV4comparisons{
@@ -405,7 +386,6 @@ sub getV4comparisons{
 		#TODO make lookup error
 		return undef;
 	}
-
 }
 
 
@@ -415,7 +395,8 @@ sub getV4comparisons{
 
 Will parse the wanted IPv4 and IPv6 prefixes from a configuration file as well
 as any autonymous system numbers.  These will be stored until 
-BGPmon::Filter::reset() is called.
+BGPmon::Filter::filterReset() is called.  This will also aggregate addresses
+where possible and setup a mult-layer hash lookup system for faster retrieval
 
 Input: A string with the location of the configuration file to parse
 
@@ -425,6 +406,7 @@ Output: 0 if there is no error
 
 =cut
 sub parse_config_file{
+	lock($lock);
 	$prefixFilename = shift;
 	my $fname = 'parse_config_file';
 	my $file;
@@ -549,8 +531,8 @@ sub parse_config_file{
 
 	#closing the file
 	close($file);
-	#condensePrefs(); #aggregates where possible
-	#optimizePrefs(); #puts them in the multilayer hash for faster lookups
+	condense_prefs(); #aggregates where possible
+	optimize_prefs(); #puts them in the multilayer hash for faster lookups
 
 	$error_code{$fname} = NO_ERROR_CODE;
 	$error_msg{$fname} = NO_ERROR_MSG;
@@ -560,6 +542,49 @@ sub parse_config_file{
 
 
 
+sub parse_database_config{
+	my $listName = shift;
+	my $fname = 'parse_database_config';
+	lock($lock);
+
+
+	#getting a list of prefixes
+	my @prefs = BGPmon::CPM::PList::Manager::export2CSV('',$listName);
+	my $size = scalar(@prefs);
+	if($size == 0){
+		#TODO create an error message that has the list size at zero
+	}
+
+	#resetting the module
+	filterReset();
+
+	#creating new prefixes
+	foreach(@prefs){
+		my $newPref = $_->prefix();
+		my $moreSpec = $_->watch_more_specifics();
+		if(is_IPv6($newPref)){
+			my $temp = new BGPmon::Filter::Prefix(6, $newPref, $moreSpec);
+            push(@v6prefixes, $temp);
+		}
+		else{
+			my $temp = new BGPmon::Filter::Prefix(4, $newPref, $moreSpec);
+			push(@v4prefixes, $temp);
+		}
+	}
+
+
+	#optimizing
+	condense_prefs(); #aggregates where possible
+	optimize_prefs(); #puts them in the multilayer hash for faster lookups
+
+	$error_code{$fname} = NO_ERROR_CODE;
+	$error_msg{$fname} = NO_ERROR_MSG;
+
+	return 0;
+
+}
+
+#puts the prefixes for IPv4 into a multi-layer hash lookup
 sub optimize_prefs{
 	foreach(@v4prefixes){
 		my $temp = $_;
@@ -569,8 +594,6 @@ sub optimize_prefs{
 	#TODO put in error codes
 
 	return 0;
-
-
 }
 
 =head2 get_num_IPv4_prefs
@@ -584,7 +607,6 @@ Output : Integer
 sub get_num_IPv4_prefs{
 	my $toReturn = scalar(@v4prefixes);
 	return $toReturn;
-#	return $v4Count;
 }
 
 =head2 get_num_IPv6_prefs
@@ -639,9 +661,9 @@ Output : Integer
 
 =cut
 sub get_total_num_filters{
+	lock($lock);
 	my $toReturn = 0;
 	$toReturn += scalar(@v4prefixes);
-#	$toReturn += $v4Count;
 	$toReturn += scalar(@v6prefixes);
 	$toReturn += scalar(%asNumbers);
 	$toReturn += scalar(@addresses);
@@ -649,19 +671,18 @@ sub get_total_num_filters{
 }
 
 
-=head2 condense__prefs
-
-Will try to aggregate IPv4 and IPv6 prefixes where possible.  This is used to reduce
-overhead that the filter script may experience later.  Please note that the
-parse_config_file must be ran beforehand.
-
-Input: None
-
-Output: 0 if there is no error
-        1 if an error occured
-
-
-=cut
+#condense__prefs
+#
+#Will try to aggregate IPv4 and IPv6 prefixes where possible.  This is used to reduce
+#overhead that the filter script may experience later.  Please note that the
+#parse_config_file must be ran beforehand.
+#
+#Input: None
+#
+#Output: 0 if there is no error
+#        1 if an error occured
+#
+#
 sub condense_prefs{
 	
 	##Starting with IPv4
@@ -744,8 +765,8 @@ as   1
 
 =cut
 
-sub printFilters(){
-
+sub printFilters{
+	lock($lock);
 	foreach(@v4prefixes){
 		my $temp = $_->toString();
 		print "$temp\n";
@@ -779,7 +800,8 @@ AS numbers pulled from the message:
 12345
 
 =cut
-sub toString(){
+sub toString{
+	lock($lock);
 	my $fname = 'toString';
 	my $toReturn = "";
 
@@ -829,6 +851,7 @@ sub toString(){
 #
 #cut
 sub parse_xml_msg{
+	lock($lock);
 	my $fname = 'parse_xml_msg';
 	my $xmlMsg = shift;
 
@@ -951,6 +974,7 @@ Output: 1 if there was at least one matching filed.
 
 =cut
 sub matches{
+	lock($lock);
 	my $xmlMsg = shift;
 	my $fname = 'matches';
 

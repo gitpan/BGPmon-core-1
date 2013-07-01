@@ -3,7 +3,8 @@ no strict "refs";
 use warnings;
 #use Test::More tests => 99;
 #use Test::More tests => 97;
-use Test::More skip_all => "Only for development purposes";
+#use Test::More skip_all => "Only for development purposes";
+use Test::More;
 
 # check the dependencies
 BEGIN {
@@ -291,7 +292,6 @@ ok($ret eq BGPmon::Log::INVALID_FUNCTION_SPECIFIED_MSG,
 # not sure how we would test the failure of a hostname
 # BGPmon::Log::LOG_INIT_NO_HOSTNAME_CODE
 
-=comment
 # subroutine for checking a log_init error condition
 sub test_init_failure {
    my ($test_msg, $err_code,  $err_msg) = @_;
@@ -301,7 +301,6 @@ sub test_init_failure {
    ok(($ret == 1) && ($ret_code eq $err_code) && ($ret_msg eq $err_msg), 
        $test_msg.", result is $ret_code: $ret_msg");
 }
-=cut
 
 # try a very long program name
 my $count;

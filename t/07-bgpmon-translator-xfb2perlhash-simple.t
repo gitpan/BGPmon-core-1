@@ -11,8 +11,15 @@ use Data::Dumper;
 
 #set the data directory and a test file containing XML messages
 #my $data_dir = `echo -n \`pwd\``."/t/data";
-my $data_dir = 't';
-my $test_file = "$data_dir/bgpmon-translator-dup-archiver-msg.xml";
+
+my $resp = `pwd`;
+my $location = 't/';
+if($resp =~ m/bgpmon-tools\/BGPmon-core\/t/){
+        $location = '';
+}
+
+
+my $test_file = $location."bgpmon-translator-dup-archiver-msg.xml";
 
 my $test_fh;
 open($test_fh,"<",$test_file) or die "unable to open sample file";

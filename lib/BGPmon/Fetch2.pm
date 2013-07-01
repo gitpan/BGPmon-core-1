@@ -1,10 +1,10 @@
-package BGPmon::Fetch;
+package BGPmon::Fetch2;
 our $VERSION = '1.092';
 
 use 5.006;
 use strict;
 use warnings;
-use BGPmon::Fetch::Client;
+use BGPmon::Fetch::Client2;
 use BGPmon::Fetch::File;
 use BGPmon::Fetch::Archive;
 
@@ -147,9 +147,9 @@ sub connect_bgpdata {
         my ($server, $port) = @_;
         $use_offline_data = 0;
 
-        if( BGPmon::Fetch::Client::connect_bgpmon($server,$port) ){
-            $error_code{$fname} = BGPmon::Fetch::Client::get_error_code('connect_bgpmon');
-            $error_msg{$fname} = BGPmon::Fetch::Client::get_error_message('connect_bgpmon');
+        if( BGPmon::Fetch2::Client2::connect_bgpmon($server,$port) ){
+            $error_code{$fname} = BGPmon::Fetch2::Client2::get_error_code('connect_bgpmon');
+            $error_msg{$fname} = BGPmon::Fetch2::Client2::get_error_message('connect_bgpmon');
             return 1;
         }
     } elsif (scalar(@_) == 3) { # Archived data.
@@ -190,10 +190,10 @@ Usage:  my $msg = read_xml_message();
 sub read_xml_message {
     my $fname = 'read_xml_message';
     if ($use_offline_data == 0) {
-        my $msg = BGPmon::Fetch::Client::read_xml_message();
+        my $msg = BGPmon::Fetch2::Client2::read_xml_message();
         if( !defined($msg) ){
-            $error_code{$fname} = BGPmon::Fetch::Client::get_error_code('read_xml_message');
-            $error_msg{$fname} = BGPmon::Fetch::Client::get_error_message('read_xml_message');
+            $error_code{$fname} = BGPmon::Fetch2::Client2::get_error_code('read_xml_message');
+            $error_msg{$fname} = BGPmon::Fetch2::Client2::get_error_message('read_xml_message');
             return undef;
         }
         $error_code{$fname} = NO_ERROR_CODE;
@@ -281,7 +281,7 @@ Usage:  if( is_connected ) { #Do stuff }
 sub is_connected {
     my $fname = 'is_connected';
     if ($use_offline_data == 0) {
-        return BGPmon::Fetch::Client::is_connected();
+        return BGPmon::Fetch2::Client2::is_connected();
     } elsif ($use_offline_data == 1) {
         return BGPmon::Fetch::Archive::is_connected();
     } elsif ($use_offline_data == 2) {
